@@ -1,0 +1,44 @@
+{
+  "name": "price-calculator",
+  "version": "1.0.0",
+  "description": "Price calculator widget for StateMesh resources and node operators",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/state-mesh/price-calculator.git"
+  },
+  "keywords": [
+    "statemesh"
+  ],
+  "author": "StateMesh Developers",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/state-mesh/price-calculator/issues"
+  },
+  "homepage": "https://github.com/state-mesh/price-calculator#readme",
+  "scripts": {
+    "start": "webpack-dev-server --config ./webpack.config.js --mode development --progress --color --port 3000",
+    "build": "webpack --mode production",
+    "deploy": "aws s3 cp ./dist/bundle.js s3://sm-price-calculator/"
+  },
+  "dependencies": {
+    "css-loader": "^7.1.2",
+    "file-loader": "^6.2.0",
+    "primereact": "^10.9.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-transition-group": "^4.4.5",
+    "style-loader": "^4.0.0",
+    "url-loader": "^4.1.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.26.0",
+    "@babel/plugin-proposal-class-properties": "^7.18.6",
+    "@babel/preset-env": "^7.26.0",
+    "@babel/preset-react": "^7.26.3",
+    "babel-loader": "^9.2.1",
+    "sass": "latest",
+    "webpack": "^5.97.1",
+    "webpack-cli": "^6.0.1",
+    "webpack-dev-server": "^5.2.0"
+  }
+}
