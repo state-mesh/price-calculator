@@ -6,6 +6,9 @@ import {Card} from "primereact/card";
 import {Slider} from "primereact/slider";
 import {InputText} from "primereact/inputtext";
 
+const averageDaysInMonth = 30.437;
+const averageHoursInAMonth = averageDaysInMonth * 24;
+
 function getAWSPricing(cpu, memory) {
     // Pricing obtained from https://aws.amazon.com/fargate/pricing/
     const cpuPrice = 0.04048; // USD/thread-hour
@@ -38,95 +41,106 @@ export default function App() {
     const [memGb, setMemGb] = useState(1);
 
     const cost = (cpuCount * AVG_CPU_PRICE + memGb * AVG_RAM_PRICE).toFixed(3);
+    const costMonth = (cost * averageHoursInAMonth).toFixed(3);
     const awsPrice = getAWSPricing(cpuCount, memGb);
+    const awsMonthPrice = (awsPrice * averageHoursInAMonth).toFixed(3);
     const gcpPrice = getGCPPricing(cpuCount, memGb);
+    const gcpMonthPrice = (gcpPrice * averageHoursInAMonth).toFixed(3);
     const azurePrice = getAzurePricing(cpuCount, memGb);
+    const azureMonthPrice = (azurePrice * averageHoursInAMonth).toFixed(3);
 
-    const priceDiffAws = (awsPrice / cost).toFixed(0);
+    const priceDiffAws = ((awsPrice + gcpPrice + azurePrice) / 3 / cost).toFixed(0);
 
     return (
-        <div className='p-3 flex gap-8'>
-            <div>
-                <div className='flex flex-column gap-1 pb-2 md:pb-4'>
-                    <p className='font-semibold m-0 text-2xl'>Estimate your costs</p>
-                    <p className='text-sm text-600 m-0'>Estimate your costs by selecting how much CPU, memory and storage you need.</p>
-                    <p className='text-sm text-600 m-0'><i><strong>Note:</strong> Costs are presented for the European region. Prices in other regions might be higher on StateMesh and all other clouds.</i></p>
-                </div>
+        <div className='p-3'>
+            <div className='flex flex-column gap-1 pb-2 md:pb-4'>
+                <p className='font-semibold m-0 text-2xl'>Estimate your costs</p>
+                <p className='text-sm text-600 m-0'>Estimate your costs by selecting how much CPU, memory and storage
+                    you need.</p>
+                <p className='text-sm text-600 m-0'><i><strong>Note:</strong> Costs are presented for the European
+                    region. Prices in other regions might be higher on StateMesh and all other clouds.</i></p>
+            </div>
 
-                <div className='flex flex-column gap-2 pt-3 md:pt-0'>
-                    <p className='m-0 font-bold text-xl'>CPUs</p>
-                    <p className="m-0 text-sm font-medium text-600">The total number of CPUs your Application will
-                        use</p>
-                </div>
-                <div className='flex align-items-center justify-content-between gap-2 px-2 pb-2 md:pb-4'>
-                    <Slider className='w-full' value={cpuCount} min={1} max={100} step={1}
-                            onChange={(e) => setCpuCount(e.value)}/>
-                    <InputText className='w-4rem text-xl font-bold text-center' value={cpuCount.toString()}
-                               onChange={(e) => setCpuCount(e.target.value)}/>
-                </div>
+            <div className='flex flex-column gap-2 pt-3 md:pt-0'>
+                <p className='m-0 font-bold text-xl'>CPUs</p>
+                <p className="m-0 text-sm font-medium text-600">The total number of CPUs your Application will
+                    use</p>
+            </div>
+            <div className='flex align-items-center justify-content-between gap-2 px-2 pb-2 md:pb-4'>
+                <Slider className='w-full' value={cpuCount} min={1} max={100} step={1}
+                        onChange={(e) => setCpuCount(e.value)}/>
+                <InputText className='w-4rem text-xl font-bold text-center' value={cpuCount.toString()}
+                           onChange={(e) => setCpuCount(e.target.value)}/>
+            </div>
 
-                <div className='flex flex-column gap-2'>
-                    <p className='m-0 font-bold text-xl'>Memory</p>
-                    <p className="m-0 text-sm font-medium text-600">The total amount of RAM your Application will
-                        use</p>
-                </div>
-                <div className='flex align-items-center justify-content-between gap-2 px-2 pb-2 md:pb-4'>
-                    <Slider className='w-full' value={memGb} min={1} max={256} step={1}
-                            onChange={(e) => setMemGb(e.value)}/>
-                    <InputText className='w-4rem text-xl font-bold text-center' value={memGb.toString()}
-                               onChange={(e) => setMemGb(e.target.value)}/>
-                </div>
+            <div className='flex flex-column gap-2'>
+                <p className='m-0 font-bold text-xl'>Memory</p>
+                <p className="m-0 text-sm font-medium text-600">The total amount of RAM your Application will
+                    use</p>
+            </div>
+            <div className='flex align-items-center justify-content-between gap-2 px-2 pb-2 md:pb-4'>
+                <Slider className='w-full' value={memGb} min={1} max={256} step={1}
+                        onChange={(e) => setMemGb(e.value)}/>
+                <InputText className='w-4rem text-xl font-bold text-center' value={memGb.toString()}
+                           onChange={(e) => setMemGb(e.target.value)}/>
+            </div>
 
 
-                <div className='flex flex-column md:flex-row align-items-center justify-content-around gap-3'>
-                    <Card className="priceCard w-10rem h-10rem mt-5" style={{border: '1px solid #2c9b27'}}>
-                        <div className='flex flex-column justify-content-center align-items-center'>
-                            <div>
-                                <img className='w-5rem'
-                                     src='https://sm-price-calculator.s3.eu-central-1.amazonaws.com/logo.jpg'/>
+            <div className='flex flex-column md:flex-row align-items-center justify-content-around gap-3'>
+                <Card className="priceCard w-10rem h-10rem mt-5" style={{border: '1px solid #2c9b27'}}>
+                    <div className='flex flex-column justify-content-center align-items-center'>
+                        <div>
+                            <img className='w-5rem'
+                                 src='https://sm-price-calculator.s3.eu-central-1.amazonaws.com/logo.jpg'/>
+                        </div>
+                        <p className='m-0 text-xl font-bold' style={{color: '#2c9b27'}}>${cost}<span
+                            className='font-normal text-lg'> / h</span></p>
+                        <p className='m-0 text-sm font-bold' style={{color: '#2c9b27'}}>${costMonth}<span
+                            className='font-normal text-xs'> / month</span></p>
+                    </div>
+                </Card>
+                <div className='text-center'>
+                    <p className='m-0 pb-2 font-semibold text-red-400'>{priceDiffAws}x more expensive</p>
+                    <hr className='m-0 pb-1'/>
+                    <div className='flex flex-column md:flex-row align-items-center justify-content-around gap-3'>
+                        <Card className="priceCard w-10rem h-10rem">
+                            <div className='flex flex-column justify-content-center align-items-center'>
+                                <div>
+                                    <img className='w-5rem'
+                                         src='https://sm-price-calculator.s3.eu-central-1.amazonaws.com/aws-logo.jpg'/>
+                                </div>
+                                <p className='m-0 text-xl font-semibold text-red-400'>${awsPrice.toFixed(2)}<span
+                                    className='font-normal text-lg'> / h</span></p>
+                                <p className='m-0 text-sm font-semibold text-red-400' style={{color: '#2c9b27'}}>${awsMonthPrice}<span
+                                    className='font-normal text-xs'> / month</span></p>
                             </div>
-                            <p className='m-0 text-xl font-bold' style={{color: '#2c9b27'}}>${cost}<span
-                                className='font-normal text-lg'> / h</span></p>
-                        </div>
-                    </Card>
-                    <div className='text-center'>
-                        <p className='m-0 pb-2 font-semibold text-red-400'>{priceDiffAws}x more expensive</p>
-                        <hr className='m-0 pb-1'/>
-                        <div className='flex flex-column md:flex-row align-items-center justify-content-around gap-3'>
-                            <Card className="priceCard w-10rem h-10rem">
-                                <div className='flex flex-column justify-content-center align-items-center'>
-                                    <div>
-                                        <img className='w-5rem'
-                                             src='https://sm-price-calculator.s3.eu-central-1.amazonaws.com/aws-logo.jpg'/>
-                                    </div>
-                                    <p className='m-0 text-xl font-semibold text-red-400'>${awsPrice.toFixed(2)}<span
-                                        className='font-normal text-lg'> / h</span></p>
+                        </Card>
+                        <Card className="priceCard w-10rem h-10rem">
+                            <div className='flex flex-column justify-content-center align-items-center'>
+                                <div>
+                                    <img className='w-5rem'
+                                         src='https://sm-price-calculator.s3.eu-central-1.amazonaws.com/gcp-logo.png'/>
                                 </div>
-                            </Card>
-                            <Card className="priceCard w-10rem h-10rem">
-                                <div className='flex flex-column justify-content-center align-items-center'>
-                                    <div>
-                                        <img className='w-5rem'
-                                             src='https://sm-price-calculator.s3.eu-central-1.amazonaws.com/gcp-logo.png'/>
-                                    </div>
-                                    <p className='m-0 text-xl font-semibold text-red-400'>${gcpPrice.toFixed(2)}<span
-                                        className='font-normal text-lg'> / h</span></p>
+                                <p className='m-0 text-xl font-semibold text-red-400'>${gcpPrice.toFixed(2)}<span
+                                    className='font-normal text-lg'> / h</span></p>
+                                <p className='m-0 text-sm font-semibold text-red-400' style={{color: '#2c9b27'}}>${gcpMonthPrice}<span
+                                    className='font-normal text-xs'> / month</span></p>
+                            </div>
+                        </Card>
+                        <Card className="priceCard w-10rem h-10rem">
+                            <div className='flex flex-column justify-content-center align-items-center'>
+                                <div>
+                                    <img className='w-5rem'
+                                         src='https://sm-price-calculator.s3.eu-central-1.amazonaws.com/azure-logo.jpg'/>
                                 </div>
-                            </Card>
-                            <Card className="priceCard w-10rem h-10rem">
-                                <div className='flex flex-column justify-content-center align-items-center'>
-                                    <div>
-                                        <img className='w-5rem'
-                                             src='https://sm-price-calculator.s3.eu-central-1.amazonaws.com/azure-logo.jpg'/>
-                                    </div>
-                                    <p className='m-0 text-xl font-semibold text-red-400'>${azurePrice.toFixed(2)}<span
-                                        className='font-normal text-lg'> / h</span></p>
-                                </div>
-                            </Card>
-                        </div>
+                                <p className='m-0 text-xl font-semibold text-red-400'>${azurePrice.toFixed(2)}<span
+                                    className='font-normal text-lg'> / h</span></p>
+                                <p className='m-0 text-sm font-semibold text-red-400' style={{color: '#2c9b27'}}>${azureMonthPrice}<span
+                                    className='font-normal text-xs'> / month</span></p>
+                            </div>
+                        </Card>
                     </div>
                 </div>
-
             </div>
         </div>
     );
