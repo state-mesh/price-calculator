@@ -82,6 +82,7 @@ function getAzurePricing(zone, cpu, memory) {
 }
 
 export default function App() {
+    const GROWTH_FACTOR = 1.25;
     const AVG_CPU_PRICE_EU = 0.0035, AVG_RAM_PRICE_EU = 0.0005;
     const AVG_CPU_PRICE_SG = 0.0072, AVG_RAM_PRICE_SG = 0.0012;
 
@@ -92,11 +93,11 @@ export default function App() {
     let cost = 0;
     switch (zone) {
         case "eu": {
-            cost = cpuCount * AVG_CPU_PRICE_EU + memGb * AVG_RAM_PRICE_EU;
+            cost = cpuCount * AVG_CPU_PRICE_EU + memGb * AVG_RAM_PRICE_EU * GROWTH_FACTOR;
             break;
         }
         case "sg": {
-            cost = cpuCount * AVG_CPU_PRICE_SG + memGb * AVG_RAM_PRICE_SG;
+            cost = cpuCount * AVG_CPU_PRICE_SG + memGb * AVG_RAM_PRICE_SG * GROWTH_FACTOR;
             break;
         }
     }
