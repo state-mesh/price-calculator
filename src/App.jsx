@@ -5,48 +5,108 @@ import './index.css';
 import {Card} from "primereact/card";
 import {Slider} from "primereact/slider";
 import {InputText} from "primereact/inputtext";
+import {RadioButton} from "primereact/radiobutton";
 
 const averageDaysInMonth = 30.437;
 const averageHoursInAMonth = averageDaysInMonth * 24;
 
-function getAWSPricing(cpu, memory) {
+function getAWSPricing(zone, cpu, memory) {
     // Pricing obtained from https://aws.amazon.com/fargate/pricing/
-    const cpuPrice = 0.04048; // USD/thread-hour
-    const memoryPrice = 0.004445; // USD/GB-hour
+    let cpuPrice = 0, memoryPrice = 0;
+
+    // AWS does not support fractional CPU and memory, so we need to ceil the values
+    cpu = Math.ceil(cpu);
+    memory = Math.ceil(memory);
+
+    switch (zone) {
+        case "eu": {
+            cpuPrice = 0.04048; // USD/thread-hour
+            memoryPrice = 0.004445; // USD/GB-hour
+            break;
+        }
+        case "sg": {
+            cpuPrice = 0.05056; // USD/thread-hour
+            memoryPrice = 0.00553; // USD/GB-hour
+            break;
+        }
+    }
+    return cpu * cpuPrice + memory * memoryPrice;
+}
+
+function getGCPPricing(zone, cpu, memory) {
+    // Pricing obtained from https://cloud.google.com/compute/vm-instance-pricing#general-purpose_machine_type_family
+    let cpuPrice = 0, memoryPrice = 0;
+
+    // GCP does not support fractional CPU and memory, so we need to ceil the values
+    cpu = Math.ceil(cpu);
+    memory = Math.ceil(memory);
+
+    switch (zone) {
+        case "eu": {
+            cpuPrice = 0.040887; // USD/thread-hour
+            memoryPrice = 0.00464684; // USD/GB-hour
+            break;
+        }
+        case "sg": {
+            cpuPrice = 0.04274771; // USD/thread-hour
+            memoryPrice = 0.004858311; // USD/GB-hour
+            break;
+        }
+    }
 
     return cpu * cpuPrice + memory * memoryPrice;
 }
 
-function getGCPPricing(cpu, memory) {
-    // Pricing obtained from https://cloud.google.com/kubernetes-engine/pricing
-    const cpuPrice = 0.0445; // USD/thread-hour
-    const memoryPrice = 0.0049225; // USD/GB-hour
-
-    return cpu * cpuPrice + memory * memoryPrice;
-}
-
-function getAzurePricing(cpu, memory) {
+function getAzurePricing(zone, cpu, memory) {
     // Pricing obtained from https://azure.microsoft.com/en-ca/pricing/details/container-instances/
-    const cpuPrice = 0.0486; // USD/thread-hour
-    const memoryPrice = 0.00533; // USD/GB-hour
+    let cpuPrice = 0, memoryPrice = 0;
+
+    // Azure does not support fractional CPU and memory, so we need to ceil the values
+    cpu = Math.ceil(cpu);
+    memory = Math.ceil(memory);
+
+    switch (zone) {
+        case "eu": {
+            cpuPrice = 0.00511; // USD/thread-hour
+            memoryPrice =  0.04656; // USD/GB-hour
+            break;
+        }
+        case "sg": {
+            cpuPrice = 0.00553; // USD/thread-hour
+            memoryPrice = 0.05060; // USD/GB-hour
+            break;
+        }
+    }
 
     return cpu * cpuPrice + memory * memoryPrice;
 }
 
 export default function App() {
-    const AVG_CPU_PRICE = 0.0035;
-    const AVG_RAM_PRICE = 0.0005;
+    const AVG_CPU_PRICE_EU = 0.0035, AVG_RAM_PRICE_EU = 0.0005;
+    const AVG_CPU_PRICE_SG = 0.0072, AVG_RAM_PRICE_SG = 0.0012;
 
     const [cpuCount, setCpuCount] = useState(1);
     const [memGb, setMemGb] = useState(1);
+    const [zone, setZone] = useState("eu");
 
-    const cost = (cpuCount * AVG_CPU_PRICE + memGb * AVG_RAM_PRICE).toFixed(3);
+    let cost = 0;
+    switch (zone) {
+        case "eu": {
+            cost = cpuCount * AVG_CPU_PRICE_EU + memGb * AVG_RAM_PRICE_EU;
+            break;
+        }
+        case "sg": {
+            cost = cpuCount * AVG_CPU_PRICE_SG + memGb * AVG_RAM_PRICE_SG;
+            break;
+        }
+    }
+
     const costMonth = (cost * averageHoursInAMonth).toFixed(3);
-    const awsPrice = getAWSPricing(cpuCount, memGb);
+    const awsPrice = getAWSPricing(zone, cpuCount, memGb);
     const awsMonthPrice = (awsPrice * averageHoursInAMonth).toFixed(3);
-    const gcpPrice = getGCPPricing(cpuCount, memGb);
+    const gcpPrice = getGCPPricing(zone, cpuCount, memGb);
     const gcpMonthPrice = (gcpPrice * averageHoursInAMonth).toFixed(3);
-    const azurePrice = getAzurePricing(cpuCount, memGb);
+    const azurePrice = getAzurePricing(zone, cpuCount, memGb);
     const azureMonthPrice = (azurePrice * averageHoursInAMonth).toFixed(3);
 
     const priceDiffAws = ((awsPrice + gcpPrice + azurePrice) / 3 / cost).toFixed(0);
@@ -57,8 +117,19 @@ export default function App() {
                 <p className='font-semibold m-0 text-2xl'>Estimate your costs</p>
                 <p className='text-sm text-600 m-0'>Estimate your costs by selecting how much CPU, memory and storage
                     you need.</p>
-                <p className='text-sm text-600 m-0'><i><strong>Note:</strong> Costs are presented for the European
-                    region. Prices in other regions might be higher on StateMesh and all other clouds.</i></p>
+            </div>
+
+            <div className="flex flex-wrap gap-3 mb-5">
+                <div className="flex align-items-center">
+                    <RadioButton inputId="eu" name="eu" value="eu"
+                                 onChange={(e) => setZone(e.value)} checked={zone === 'eu'}/>
+                    <label htmlFor="ingredient1" className="ml-2">Europe</label>
+                </div>
+                <div className="flex align-items-center">
+                    <RadioButton inputId="sg" name="eu" value="sg"
+                                 onChange={(e) => setZone(e.value)} checked={zone === 'sg'}/>
+                    <label htmlFor="ingredient2" className="ml-2">Singapore</label>
+                </div>
             </div>
 
             <div className='flex flex-column gap-2 pt-3 md:pt-0'>
@@ -67,10 +138,10 @@ export default function App() {
                     use</p>
             </div>
             <div className='flex align-items-center justify-content-between gap-2 px-2 pb-2 md:pb-4'>
-                <Slider className='w-full' value={cpuCount} min={1} max={100} step={1}
+                <Slider className='w-full' value={cpuCount} min={1} max={100} step={0.1}
                         onChange={(e) => setCpuCount(e.value)}/>
                 <InputText className='w-4rem text-xl font-bold text-center' value={cpuCount.toString()}
-                           onChange={(e) => setCpuCount(e.target.value)}/>
+                           onChange={(e) => setCpuCount(Number(e.target.value))}/>
             </div>
 
             <div className='flex flex-column gap-2'>
@@ -79,10 +150,10 @@ export default function App() {
                     use</p>
             </div>
             <div className='flex align-items-center justify-content-between gap-2 px-2 pb-2 md:pb-4'>
-                <Slider className='w-full' value={memGb} min={1} max={256} step={1}
+                <Slider className='w-full' value={memGb} min={1} max={256} step={0.1}
                         onChange={(e) => setMemGb(e.value)}/>
                 <InputText className='w-4rem text-xl font-bold text-center' value={memGb.toString()}
-                           onChange={(e) => setMemGb(e.target.value)}/>
+                           onChange={(e) => setMemGb(Number(e.target.value))}/>
             </div>
 
 
@@ -93,7 +164,7 @@ export default function App() {
                             <img className='w-5rem'
                                  src='https://sm-price-calculator.s3.eu-central-1.amazonaws.com/logo.jpg'/>
                         </div>
-                        <p className='m-0 text-xl font-bold' style={{color: '#2c9b27'}}>${cost}<span
+                        <p className='m-0 text-xl font-bold' style={{color: '#2c9b27'}}>${cost.toFixed(3)}<span
                             className='font-normal text-lg'> / h</span></p>
                         <p className='m-0 text-sm font-bold' style={{color: '#2c9b27'}}>${costMonth}<span
                             className='font-normal text-xs'> / month</span></p>
@@ -109,9 +180,10 @@ export default function App() {
                                     <img className='w-5rem'
                                          src='https://sm-price-calculator.s3.eu-central-1.amazonaws.com/aws-logo.jpg'/>
                                 </div>
-                                <p className='m-0 text-xl font-semibold text-red-400'>${awsPrice.toFixed(2)}<span
+                                <p className='m-0 text-xl font-semibold text-red-400'>${awsPrice.toFixed(3)}<span
                                     className='font-normal text-lg'> / h</span></p>
-                                <p className='m-0 text-sm font-semibold text-red-400' style={{color: '#2c9b27'}}>${awsMonthPrice}<span
+                                <p className='m-0 text-sm font-semibold text-red-400'
+                                   style={{color: '#2c9b27'}}>${awsMonthPrice}<span
                                     className='font-normal text-xs'> / month</span></p>
                             </div>
                         </Card>
@@ -121,9 +193,10 @@ export default function App() {
                                     <img className='w-5rem'
                                          src='https://sm-price-calculator.s3.eu-central-1.amazonaws.com/gcp-logo.png'/>
                                 </div>
-                                <p className='m-0 text-xl font-semibold text-red-400'>${gcpPrice.toFixed(2)}<span
+                                <p className='m-0 text-xl font-semibold text-red-400'>${gcpPrice.toFixed(3)}<span
                                     className='font-normal text-lg'> / h</span></p>
-                                <p className='m-0 text-sm font-semibold text-red-400' style={{color: '#2c9b27'}}>${gcpMonthPrice}<span
+                                <p className='m-0 text-sm font-semibold text-red-400'
+                                   style={{color: '#2c9b27'}}>${gcpMonthPrice}<span
                                     className='font-normal text-xs'> / month</span></p>
                             </div>
                         </Card>
@@ -133,9 +206,10 @@ export default function App() {
                                     <img className='w-5rem'
                                          src='https://sm-price-calculator.s3.eu-central-1.amazonaws.com/azure-logo.jpg'/>
                                 </div>
-                                <p className='m-0 text-xl font-semibold text-red-400'>${azurePrice.toFixed(2)}<span
+                                <p className='m-0 text-xl font-semibold text-red-400'>${azurePrice.toFixed(3)}<span
                                     className='font-normal text-lg'> / h</span></p>
-                                <p className='m-0 text-sm font-semibold text-red-400' style={{color: '#2c9b27'}}>${azureMonthPrice}<span
+                                <p className='m-0 text-sm font-semibold text-red-400'
+                                   style={{color: '#2c9b27'}}>${azureMonthPrice}<span
                                     className='font-normal text-xs'> / month</span></p>
                             </div>
                         </Card>
