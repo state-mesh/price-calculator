@@ -1,3 +1,3 @@
 # price-calculator
-Price calculator widget for StateMesh resources and node operators
+Price calculator widget for StateMesh resources
 
